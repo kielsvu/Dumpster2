@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TrustKiel — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #161616;
+    --border: #2a1a22;
+    --border2: #3a2530;
+    --pink: #f4a7c3;
+    --pink-soft: #f8c8db;
+    --pink-dim: #c97ca0;
+    --pink-glow: rgba(244,167,195,0.12);
+    --text: #f0e0e8;
+    --text-muted: #8a6a78;
+    --text-dim: #5a4050;
+    --green: #7ecfad;
+    --red: #e07878;
+    --red-glow: rgba(224,120,120,0.1);
+    --radius: 14px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30%; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(244,167,195,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 680px; margin: 0 auto;
+    padding: 60px 20px 80px;
+  }
+
+  .header {
+    text-align: center; margin-bottom: 48px;
+    animation: fadeUp 0.7s ease both;
+  }
+  .header-eyebrow {
+    font-size: 11px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--pink-dim); margin-bottom: 14px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 700;
+    color: var(--pink-soft); line-height: 1.1; margin-bottom: 10px;
+    text-shadow: 0 0 60px rgba(244,167,195,0.25);
+  }
+  .header-sub { font-size: 13px; color: var(--text-muted); letter-spacing: 0.05em; }
+
+  /* LOCK */
+  #lockScreen {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px; text-align: center;
+    animation: fadeUp 0.5s ease both;
+  }
+  .lock-icon { display: flex; justify-content: center; margin-bottom: 16px; color: var(--pink-dim); }
+  #lockScreen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem; color: var(--pink-soft); margin-bottom: 8px;
+  }
+  #lockScreen p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  /* INPUTS */
+  .input-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  input[type="password"], input[type="text"], input[type="number"], textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 10px 14px; outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--pink-dim);
+    box-shadow: 0 0 0 3px rgba(244,167,195,0.08);
+  }
+  input[type="password"] { width: 220px; letter-spacing: 0.1em; }
+  textarea { resize: vertical; width: 100%; min-height: 80px; line-height: 1.5; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 24px; border-radius: 8px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    transition: opacity var(--transition), transform var(--transition),
+                border-color var(--transition), color var(--transition), background var(--transition);
+    letter-spacing: 0.04em;
+  }
+  .btn:active { transform: scale(0.97) !important; }
+  @media (hover: hover) {
+    .btn-pink:hover  { opacity: 0.82; transform: translateY(-1px); }
+    .btn-ghost:hover { border-color: var(--pink-dim); color: var(--pink); transform: translateY(-1px); }
+    .btn-danger:hover { background: rgba(224,120,120,0.2); }
+  }
+  .btn-pink   { background: linear-gradient(135deg, var(--pink), var(--pink-dim)); color: #2a0a1a; }
+  .btn-ghost  { background: transparent; border: 1px solid var(--border2); color: var(--text-muted); }
+  .btn-danger { background: var(--red-glow); border: 1px solid rgba(224,120,120,0.3); color: var(--red); }
+  .btn-sm     { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+
+  /* ADMIN PANEL */
+  #adminPanel { display: none; animation: fadeUp 0.5s ease both; }
+
+  /* SETUP CARD */
+  .setup-card {
+    background: rgba(244,167,195,0.03);
+    border: 1px solid rgba(244,167,195,0.15);
+    border-radius: var(--radius);
+    padding: 24px 28px; margin-bottom: 20px;
+  }
+  .setup-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem; color: var(--pink-soft);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group  { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label  { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
+
+  .setup-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; margin-top: 14px; padding: 10px 14px;
+    border-radius: 8px; border: 1px solid var(--border2);
+    background: var(--surface2);
+  }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--text-dim); transition: background 0.3s; }
+  .status-dot.ok  { background: var(--green); }
+  .status-dot.err { background: var(--red); }
+
+  /* PANEL CARD */
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 28px 24px; margin-bottom: 20px;
+  }
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; color: var(--pink-soft);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+  /* STAR PICKER */
+  .star-picker { display: flex; gap: 4px; align-items: center; margin-top: 2px; }
+  .star-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-dim); padding: 2px; line-height: 1;
+    display: inline-flex; align-items: center;
+    transition: color 0.15s, transform 0.1s;
+  }
+  .star-btn.active { color: var(--pink); }
+  @media (hover: hover) { .star-btn:hover { color: var(--pink); transform: scale(1.15); } }
+  .star-count-label { font-size: 12px; color: var(--text-muted); margin-left: 6px; min-width: 40px; }
+
+  /* PUBLISH BAR */
+  .publish-bar {
+    display: none; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 13px; margin-top: 14px; color: var(--text-muted);
+  }
+  .publish-bar.show { display: flex; }
+  .publish-spinner {
+    width: 16px; height: 16px; flex-shrink: 0;
+    border: 2px solid var(--border2); border-top-color: var(--pink);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ADMIN LIST */
+  .section-label {
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 14px; padding-left: 2px;
+  }
+  .admin-list { display: flex; flex-direction: column; gap: 10px; }
+  .admin-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+    display: flex; align-items: flex-start; gap: 14px;
+    animation: fadeUp 0.3s ease both;
+    transition: border-color var(--transition);
+  }
+  @media (hover: hover) { .admin-card:hover { border-color: var(--border2); } }
+  .admin-card-info { flex: 1; min-width: 0; }
+  .admin-card-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--pink-soft); margin-bottom: 2px; }
+  .admin-card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+  .admin-card-stars { display: flex; gap: 2px; align-items: center; }
+  .admin-card-date  { font-size: 11px; color: var(--text-dim); }
+  .admin-card-comment { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .admin-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 22px;
+    font-size: 13px; letter-spacing: 0.04em;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 999; white-space: nowrap;
+  }
+  .toast.show   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(126,207,173,0.4); color: var(--green); }
+  .toast.error   { border-color: rgba(224,120,120,0.4); color: var(--red); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SVG ICONS */
+  .icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+  .icon-lock    { width: 48px; height: 48px; }
+  .icon-sm      { width: 15px; height: 15px; }
+  .icon-md      { width: 17px; height: 17px; }
+  .icon-star    { width: 12px; height: 12px; }
+  .icon-star-lg { width: 18px; height: 18px; }
+  .star-svg-filled { color: var(--pink); }
+  .star-svg-empty  { color: var(--text-dim); }
+
+  @media (max-width: 520px) {
+    .form-grid, .setup-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+    .panel-card, .setup-card { padding: 20px 16px; }
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink-dim); }
+</style>
+</head>
+<body>
+
+<!-- SVG SPRITE -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="icon-sparkle" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5Z"/>
+  </symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="icon-star-filled" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+  </symbol>
+  <symbol id="icon-star-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+  </symbol>
+  <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </symbol>
+  <symbol id="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </symbol>
+  <symbol id="icon-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+</svg>
+
+<div class="container">
+
+  <div class="header">
+    <div class="header-eyebrow">Admin — Private Access</div>
+    <h1>TrustKiel Panel</h1>
+    <div class="header-sub">Manage Vouches</div>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div id="lockScreen">
+    <div class="lock-icon">
+      <svg class="icon icon-lock" aria-hidden="true"><use href="#icon-lock"/></svg>
+    </div>
+    <h2>Admin Access</h2>
+    <p>Enter your password to continue.</p>
+    <div class="input-row">
+      <input type="password" id="passInput" placeholder="Password" autocomplete="current-password" />
+      <button class="btn btn-pink" onclick="unlock()">Unlock</button>
+    </div>
+    <p id="passError" style="color:var(--red);font-size:12px;margin-top:12px;display:none;">
+      Incorrect password. Try again.
+    </p>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel">
+
+    <!-- GitHub Setup -->
+    <div class="setup-card">
+      <div class="setup-card-title">
+        <svg class="icon icon-md" style="color:var(--pink-dim)" aria-hidden="true"><use href="#icon-key"/></svg>
+        GitHub Auto-Publish Setup
+      </div>
+      <div class="setup-grid">
+        <div class="form-group">
+          <label class="form-label">GitHub Username</label>
+          <input type="text" id="ghUser" placeholder="e.g. trustkiel" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Repository Name</label>
+          <input type="text" id="ghRepo" placeholder="e.g. trustkiel.github.io" />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Personal Access Token</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:100%;letter-spacing:0.04em;" />
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top:14px;">
+        <button class="btn btn-pink" onclick="saveAndConnect()">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-check"/></svg> Save &amp; Connect
+        </button>
+        <button class="btn btn-ghost" onclick="loadVouchesFromGitHub()">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-refresh"/></svg> Reload from GitHub
+        </button>
+      </div>
+      <div class="setup-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText" style="font-size:12px;color:var(--text-muted);">Not connected — fill in your GitHub details above.</span>
+      </div>
+    </div>
+
+    <!-- Add vouch form -->
+    <div class="panel-card">
+      <div class="panel-title">
+        <svg class="icon icon-md" style="color:var(--pink-dim)" aria-hidden="true"><use href="#icon-sparkle"/></svg>
+        Add New Vouch
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Title / Name</label>
+          <input type="text" id="vName" placeholder="e.g. Fast and Trusted" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input type="text" id="vDate" placeholder="YYYY-MM-DD" />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Comment</label>
+          <textarea id="vComment" placeholder="e.g. Blue Gear — highly recommend!"></textarea>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Rating (stars)</label>
+          <div class="star-picker" id="starPicker"></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-pink" onclick="addVouch()">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-plus"/></svg> Add &amp; Publish
+        </button>
+        <button class="btn btn-ghost" onclick="clearForm()">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-refresh"/></svg> Clear
+        </button>
+        <button class="btn btn-ghost" style="margin-left:auto;" onclick="lock()">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-logout"/></svg> Lock
+        </button>
+      </div>
+      <div class="publish-bar" id="publishBar">
+        <div class="publish-spinner"></div>
+        <span id="publishMsg">Publishing to GitHub…</span>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div class="section-label">Existing Vouches — <span id="adminCount">0</span></div>
+    <div class="admin-list" id="adminList"></div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const ADMIN_PASSWORD = 'trustkiel2026';
+
+  let vouches = [];
+  let selectedRating = 10;
+  let ghFileSha = null;
+
+  /* ── Config helpers ── */
+  function getConfig() {
+    return {
+      user:  document.getElementById('ghUser').value.trim(),
+      repo:  document.getElementById('ghRepo').value.trim(),
+      token: document.getElementById('ghToken').value.trim()
+    };
+  }
+
+  function saveAndConnect() {
+    const c = getConfig();
+    if (!c.user || !c.repo || !c.token) { toast('Fill in all three GitHub fields.', 'error'); return; }
+    sessionStorage.setItem('gh_user',  c.user);
+    sessionStorage.setItem('gh_repo',  c.repo);
+    sessionStorage.setItem('gh_token', c.token);
+    loadVouchesFromGitHub();
+  }
+
+  function restoreConfig() {
+    const u = sessionStorage.getItem('gh_user');
+    const r = sessionStorage.getItem('gh_repo');
+    const t = sessionStorage.getItem('gh_token');
+    if (u) document.getElementById('ghUser').value  = u;
+    if (r) document.getElementById('ghRepo').value  = r;
+    if (t) document.getElementById('ghToken').value = t;
+    return !!(u && r && t);
+  }
+
+  function setStatus(state, msg) {
+    const dot = document.getElementById('statusDot');
+    dot.className = 'status-dot' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+    document.getElementById('statusText').textContent = msg;
+  }
+
+  /* ── Load from GitHub ── */
+  async function loadVouchesFromGitHub() {
+    const c = getConfig();
+    if (!c.user || !c.repo || !c.token) {
+      setStatus('err', 'Missing GitHub config.'); return;
+    }
+    setStatus('', 'Connecting to GitHub…');
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${c.user}/${c.repo}/contents/index.html`,
+        { headers: { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+      const data = await res.json();
+      ghFileSha = data.sha;
+      const html = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      const match = html.match(/const VOUCHES\s*=\s*(\[[\s\S]*?\]);/);
+      if (!match) throw new Error('Could not find VOUCHES array in index.html');
+      vouches = JSON.parse(match[1]);
+      setStatus('ok', `Connected. ${vouches.length} vouch${vouches.length !== 1 ? 'es' : ''} loaded.`);
+      renderAdminList();
+      toast('Live data loaded from GitHub.', 'success');
+    } catch (e) {
+      setStatus('err', `Error: ${e.message}`);
+      toast(`GitHub error: ${e.message}`, 'error');
+    }
+  }
+
+  /* ── Publish to GitHub ── */
+  async function publishToGitHub(action) {
+    const c = getConfig();
+    if (!c.user || !c.repo || !c.token) { toast('GitHub not configured.', 'error'); return false; }
+    if (!ghFileSha) { toast('Click "Reload from GitHub" first.', 'error'); return false; }
+
+    document.getElementById('publishMsg').textContent = 'Publishing to GitHub…';
+    document.getElementById('publishBar').classList.add('show');
+
+    try {
+      // Refetch to get latest SHA + content
+      const fetchRes = await fetch(
+        `https://api.github.com/repos/${c.user}/${c.repo}/contents/index.html`,
+        { headers: { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (!fetchRes.ok) throw new Error(`Fetch failed: HTTP ${fetchRes.status}`);
+      const fileData = await fetchRes.json();
+      ghFileSha = fileData.sha;
+      const currentHtml = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+
+      const lines = vouches.map(v =>
+        `    { "name": ${JSON.stringify(v.name)}, "rating": ${v.rating}, "comment": ${JSON.stringify(v.comment)}, "date": ${JSON.stringify(v.date)} }`
+      );
+      const newBlock = `const VOUCHES = [\n${lines.join(',\n')}\n  ]`;
+      const updatedHtml = currentHtml.replace(/const VOUCHES\s*=\s*\[[\s\S]*?\]/, newBlock);
+      if (updatedHtml === currentHtml) throw new Error('VOUCHES block not found in index.html');
+
+      const encoded = btoa(unescape(encodeURIComponent(updatedHtml)));
+
+      const putRes = await fetch(
+        `https://api.github.com/repos/${c.user}/${c.repo}/contents/index.html`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${c.token}`,
+            Accept: 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: `Admin: ${action}`, content: encoded, sha: ghFileSha })
+        }
+      );
+      if (!putRes.ok) { const e = await putRes.json().catch(() => ({})); throw new Error(e.message || `HTTP ${putRes.status}`); }
+      const putData = await putRes.json();
+      ghFileSha = putData.content.sha;
+
+      document.getElementById('publishBar').classList.remove('show');
+      setStatus('ok', `Published. ${vouches.length} vouch${vouches.length !== 1 ? 'es' : ''} live. Page updates in ~30s.`);
+      toast('Published! Live in about 30 seconds.', 'success');
+      return true;
+    } catch (e) {
+      document.getElementById('publishBar').classList.remove('show');
+      setStatus('err', `Publish failed: ${e.message}`);
+      toast(`Publish failed: ${e.message}`, 'error');
+      return false;
+    }
+  }
+
+  /* ── Lock / Unlock ── */
+  document.getElementById('passInput').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+  function unlock() {
+    if (document.getElementById('passInput').value === ADMIN_PASSWORD) {
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'block';
+      setTodayDate(); buildStarPicker();
+      if (restoreConfig()) loadVouchesFromGitHub();
+    } else {
+      document.getElementById('passError').style.display = 'block';
+      document.getElementById('passInput').value = '';
+      document.getElementById('passInput').focus();
+    }
+  }
+
+  function lock() {
+    document.getElementById('lockScreen').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('passInput').value = '';
+  }
+
+  /* ── Form ── */
+  function setTodayDate() {
+    const n = new Date();
+    document.getElementById('vDate').value =
+      `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  }
+
+  function buildStarPicker() {
+    const el = document.getElementById('starPicker');
+    el.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'star-btn' + (i <= selectedRating ? ' active' : '');
+      btn.innerHTML = `<svg class="icon icon-star-lg" aria-hidden="true"><use href="#icon-${i <= selectedRating ? 'star-filled' : 'star-empty'}"/></svg>`;
+      btn.dataset.val = i;
+      btn.title = `${i} star${i !== 1 ? 's' : ''}`;
+      btn.onclick = () => { selectedRating = i; buildStarPicker(); };
+      el.appendChild(btn);
+    }
+    const lbl = document.createElement('span');
+    lbl.className = 'star-count-label';
+    lbl.textContent = `${selectedRating}/10`;
+    el.appendChild(lbl);
+  }
+
+  function clearForm() {
+    document.getElementById('vName').value = '';
+    document.getElementById('vComment').value = '';
+    setTodayDate(); selectedRating = 10; buildStarPicker();
+  }
+
+  /* ── Add / Delete ── */
+  async function addVouch() {
+    const name    = document.getElementById('vName').value.trim();
+    const dateStr = document.getElementById('vDate').value.trim();
+    const comment = document.getElementById('vComment').value.trim();
+    if (!name || !dateStr || !comment) { toast('Fill in all fields.', 'error'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) { toast('Date must be YYYY-MM-DD.', 'error'); return; }
+    vouches.push({ name, rating: selectedRating, comment, date: dateStr });
+    renderAdminList();
+    clearForm();
+    await publishToGitHub(`Add vouch "${name}"`);
+  }
+
+  async function deleteVouch(idx) {
+    if (!confirm('Delete this vouch?')) return;
+    const name = vouches[idx].name;
+    vouches.splice(idx, 1);
+    renderAdminList();
+    await publishToGitHub(`Delete vouch "${name}"`);
+  }
+
+  /* ── Render list ── */
+  function formatDate(str) {
+    return new Date(str + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  }
+
+  function starsSVG(n) {
+    let h = '';
+    for (let i = 1; i <= 10; i++)
+      h += `<svg class="icon icon-star ${i <= n ? 'star-svg-filled' : 'star-svg-empty'}" aria-hidden="true"><use href="#icon-${i <= n ? 'star-filled' : 'star-empty'}"/></svg>`;
+    return h;
+  }
+
+  function renderAdminList() {
+    const sorted = [...vouches].map((v, i) => ({ ...v, _i: i })).sort((a, b) => new Date(b.date) - new Date(a.date));
+    document.getElementById('adminCount').textContent = `${vouches.length} Vouch${vouches.length !== 1 ? 'es' : ''}`;
+    const el = document.getElementById('adminList');
+    if (!sorted.length) {
+      el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-dim);font-size:13px;">No vouches yet.</div>`;
+      return;
+    }
+    el.innerHTML = sorted.map((v, i) => `
+      <div class="admin-card" style="animation-delay:${Math.min(i*0.03,0.3)}s">
+        <div class="admin-card-info">
+          <div class="admin-card-name">${esc(v.name)}</div>
+          <div class="admin-card-meta">
+            <span class="admin-card-stars">${starsSVG(Number(v.rating))}</span>
+            <span class="admin-card-date">${formatDate(v.date)}</span>
+          </div>
+          <div class="admin-card-comment">${esc(v.comment)}</div>
+        </div>
+        <div class="admin-card-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteVouch(${v._i})" title="Delete">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ── Toast ── */
+  let _tt;
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    clearTimeout(_tt);
+    _tt = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
